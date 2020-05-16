@@ -1,1 +1,1 @@
-![](Images/logo)
+![](Images/logo.pdf)
