@@ -9,12 +9,7 @@ Python: 3.7.7
 
 
 import numpy as np
-import sys
 
-# path = sys.path[2]
-# sys.path.insert(1, path + '/Classes')
-# sys.path.insert(1, path + '/SystemIDAlgorithms')
-# sys.path.insert(1, path + '/Plotting')
 
 from ClassesSystems.ClassMassSpringDamperDynamics import MassSpringDamperDynamics
 from ClassesSystems.ClassTwoMassSpringDamperDynamics import TwoMassSpringDamperDynamics
@@ -22,12 +17,11 @@ from ClassesSystems.ClassThreeMassSpringDamperDynamics import *
 from ClassesSystems.ClassAutomobileSystemDynamics import AutomobileSystemDynamics
 from ClassesGeneral.ClassSystem import LinearSystem
 from ClassesGeneral.ClassSignal import Signal, OutputSignal, subtract2Signals
-from ClassesSystemID.ClassMarkovExperimental import MarkovExperimental, MarkovExperimental_Frequency
-from ClassesSystemID.ClassMarkovAnalytical import MarkovAnalytical
+from ClassesSystemID.ClassOKID import *
 from ClassesSystemID.ClassERA import ERA
-# from PlotEigenValues import plotEigenValues
-# from PlotSignals import plotSignals
-# from PlotSingularValues import plotSingularValues
+from Plotting.PlotEigenValues import plotEigenValues
+from Plotting.PlotSignals import plotSignals
+from Plotting.PlotSingularValues import plotSingularValues
 
 
 ## Parameters of the Dynamics - From system parameters
@@ -79,8 +73,8 @@ magnitude_impulse = np.array([10])
 
 
 ## Define the Input Signal
-S1 = Signal(total_time, frequency, Dynamics.input_dimension, name, mean=mean, standard_deviation=standard_deviation)
-#S1 = Signal(total_time, frequency, Dynamics.input_dimension, name, magnitude_impulse=magnitude_impulse)
+#S1 = Signal(total_time, frequency, Dynamics.input_dimension, name, mean=mean, standard_deviation=standard_deviation)
+S1 = Signal(total_time, frequency, Dynamics.input_dimension, name, magnitude_impulse=magnitude_impulse)
 
 
 ## Define the Output Signal
@@ -88,10 +82,8 @@ S2 = OutputSignal(S1, Sys, 'Output Signal')
 
 
 ## Calculate Markov Parameters
-MExp = MarkovExperimental(S1, S2)
-MExpF = MarkovExperimental_Frequency(S1, S2)
-MAnalytical = MarkovAnalytical(Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D, total_time*frequency + 1)
-ERA1 = ERA(MExp.markov_parameters_from_observer_full, Dynamics.state_dimension)
+markov_parameters = OKIDObserver(S1, S2).markov_parameters
+ERA1 = ERA(markov_parameters, Dynamics.state_dimension)
 
 
 ## Define Identified System
@@ -103,6 +95,6 @@ S2ID = OutputSignal(S1, SysID, 'Identified Output Signal')
 
 
 ## Plotting
-# plotSignals([[S1], [S2, S2ID], [subtract2Signals(S2, S2ID)]], 1)
-# plotEigenValues([Sys, SysID], 2)
-# plotSingularValues([ERA1], ['IdentifiedSystem'], 3)
+plotSignals([[S1], [S2, S2ID], [subtract2Signals(S2, S2ID)]], 1)
+plotEigenValues([Sys, SysID], 2)
+plotSingularValues([ERA1], ['IdentifiedSystem'], 3)
