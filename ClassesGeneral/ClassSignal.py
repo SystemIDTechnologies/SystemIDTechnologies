@@ -10,7 +10,7 @@ Python: 3.7.7
 
 import numpy as np
 
-from Propagation import propagation
+from SystemIDAlgorithms.Propagation import propagation
 
 
 class Signal:

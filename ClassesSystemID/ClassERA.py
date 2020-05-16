@@ -8,8 +8,8 @@ Python: 3.7.7
 """
 
 
-from EigenSystemRealizationAlgorithm import eigenSystemRealizationAlgorithm
-from EigenSystemRealizationAlgorithmFromInitialConditionResponse import eigenSystemRealizationAlgorithmFromInitialConditionResponse
+from SystemIDAlgorithms.EigenSystemRealizationAlgorithm import eigenSystemRealizationAlgorithm
+from SystemIDAlgorithms.EigenSystemRealizationAlgorithmFromInitialConditionResponse import eigenSystemRealizationAlgorithmFromInitialConditionResponse
 
 
 class ERA:

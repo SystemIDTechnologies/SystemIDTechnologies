@@ -8,7 +8,7 @@ Python: 3.7.7
 """
 
 
-from ClassSignal import OutputSignal
+from ClassesGeneral.ClassSignal import OutputSignal
 
 
 class Experiments:
