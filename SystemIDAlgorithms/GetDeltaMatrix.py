@@ -9,27 +9,20 @@ Python: 3.7.7
 
 
 import numpy as np
+from SystemIDAlgorithms.GetTimeVaryingMarkovParameters import getTimeVaryingMarkovParameters
 
 
-def getDeltaMatrix(A, B, C, D, p, tk, dt):
+def getDeltaMatrix(A, B, C, D, tk, dt, number_steps):
 
-    (state_dimension, _) = A(tk).shape
-    (output_dimension, _) = C(tk).shape
+    # Get dimensions
+    output_dimension, input_dimension = D(tk).shape
 
-    O = np.zeros([p * output_dimension, state_dimension])
+    # Get Delta Matrix
+    Delta = np.zeros([number_steps * output_dimension, number_steps * input_dimension])
+    for i in range(number_steps):
+        print(i)
+        for j in range(i+1):
+            Delta[i*output_dimension:(i+1)*output_dimension, j*input_dimension:(j+1)*input_dimension] = getTimeVaryingMarkovParameters(A, B, C, D, j*dt + tk, i*dt + tk, i-j)
 
-    O[0:output_dimension, :] = C(tk)
+    return Delta
 
-    if p <= 0:
-        return np.zeros([p * output_dimension, state_dimension])
-    if p == 1:
-        O[0:output_dimension, :] = C(tk)
-        return O
-    if p > 1:
-        O[0:output_dimension, :] = C(tk)
-        for j in range(1, p):
-            temp = A(tk)
-            for i in range(0, j - 1):
-                temp = np.matmul(A(tk + (i + 1) * dt), temp)
-            O[j * output_dimension:(j + 1) * output_dimension, :] = np.matmul(C(tk + j * dt), temp)
-        return O

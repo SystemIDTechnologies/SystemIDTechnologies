@@ -19,6 +19,7 @@ from ClassesGeneral.ClassSystem import LinearSystem
 from ClassesGeneral.ClassSignal import Signal, OutputSignal, subtract2Signals
 from ClassesSystemID.ClassOKID import *
 from ClassesSystemID.ClassERA import ERA
+from SystemIDAlgorithms.IdentificationInitialCondition import identificationInitialCondition
 from Plotting.PlotEigenValues import plotEigenValues
 from Plotting.PlotSignals import plotSignals
 from Plotting.PlotSingularValues import plotSingularValues
@@ -54,8 +55,9 @@ Dynamics = ThreeMassSpringDamperDynamics(dt, mass1, mass2, mass3, spring_constan
 
 
 ## Parameters of the Linear System
-frequency = 6       # From input signal frequency
-initial_condition = np.zeros(Dynamics.state_dimension)      # Initial condition of the system - 0 here
+frequency = 5     # From input signal frequency
+#initial_condition = np.zeros(Dynamics.state_dimension)
+initial_condition = 100*np.random.randn(Dynamics.state_dimension)      # Initial condition of the system - 0 here
 initial_states = [(initial_condition, 0)]
 name = 'Three Mass Spring Damper System'
 
@@ -65,7 +67,7 @@ Sys = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension
 
 
 ## Parameters of the Input Signal - From input signal parameters
-total_time = 200
+total_time = 100
 name = 'Input Signal - White noise'
 mean = np.array([1])
 standard_deviation = 500 * np.eye(Dynamics.input_dimension)
@@ -73,8 +75,8 @@ magnitude_impulse = np.array([10])
 
 
 ## Define the Input Signal
-#S1 = Signal(total_time, frequency, Dynamics.input_dimension, name, mean=mean, standard_deviation=standard_deviation)
-S1 = Signal(total_time, frequency, Dynamics.input_dimension, name, magnitude_impulse=magnitude_impulse)
+S1 = Signal(total_time, frequency, Dynamics.input_dimension, name, mean=mean, standard_deviation=standard_deviation)
+#S1 = Signal(total_time, frequency, Dynamics.input_dimension, name, magnitude_impulse=magnitude_impulse)
 
 
 ## Define the Output Signal
@@ -84,10 +86,11 @@ S2 = OutputSignal(S1, Sys, 'Output Signal')
 ## Calculate Markov Parameters
 markov_parameters = OKIDObserver(S1, S2).markov_parameters
 ERA1 = ERA(markov_parameters, Dynamics.state_dimension)
+x0 = identificationInitialCondition(S1, S2, ERA1.A, ERA1.B, ERA1.C, ERA1.D, 0)
 
 
 ## Define Identified System
-SysID = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, initial_states, 'Identified System', ERA1.A, ERA1.B, ERA1.C, ERA1.D)
+SysID = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, [(x0[:, 0], 0)], 'Identified System', ERA1.A, ERA1.B, ERA1.C, ERA1.D)
 
 
 ## Define the Identified Output Signal
