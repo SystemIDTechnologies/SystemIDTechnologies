@@ -12,16 +12,15 @@ from ClassesGeneral.ClassSignal import OutputSignal
 
 
 class Experiments:
-    def __init__(self, systems, signals):
+    def __init__(self, systems, input_signals):
         self.systems = systems
-        self.signals = signals
-        self.number_steps = signals[0].number_steps
+        self.input_signals = input_signals
+        self.number_steps = input_signals[0].number_steps
         self.state_dimension = systems[0].state_dimension
         self.output_dimension = systems[0].output_dimension
         self.input_dimension = systems[0].input_dimension
-        self.number_experiments = len(signals)
+        self.number_experiments = len(input_signals)
         self.frequency = systems[0].frequency
-        self.outputs = []
-        self.inputs = signals
+        self.output_signals = []
         for i in range(self.number_experiments):
-            self.outputs.append(OutputSignal(signals[i], systems[i], 'Output ' + signals[i].name))
+            self.output_signals.append(OutputSignal(input_signals[i], systems[i], 'Output ' + input_signals[i].name))

@@ -18,5 +18,5 @@ class ERA:
 
 
 class ERAFromInitialConditionResponse:
-    def __init__(self, systems, state_dimension):
-        self.A, self.C, self.x0_id, self.H0, self.H1, self.R, self.Sigma, self.St, self.Rn, self.Sigman, self.Snt = eigenSystemRealizationAlgorithmFromInitialConditionResponse(systems, state_dimension)
+    def __init__(self, output_signals, state_dimension):
+        self.A, self.C, self.x0_id, self.H0, self.H1, self.R, self.Sigma, self.St, self.Rn, self.Sigman, self.Snt = eigenSystemRealizationAlgorithmFromInitialConditionResponse(output_signals, state_dimension)

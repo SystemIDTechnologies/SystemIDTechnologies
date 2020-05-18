@@ -42,6 +42,7 @@ def identificationInitialCondition(input_signal, output_signal, A, B, C, D, tk):
 
     # Get initial condition
     xtk = np.matmul(LA.pinv(O), Y - np.matmul(Delta, U))
+    print('Error IC: ', LA.norm(Y - np.matmul(O, xtk) - np.matmul(Delta, U)))
 
     return xtk
 

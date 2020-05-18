@@ -12,7 +12,7 @@ import numpy as np
 from numpy import linalg as LA
 
 
-def observerKalmanIdentificationAlgorithmObserver(input_signal, output_signal):
+def observerKalmanIdentificationAlgorithmObserverWithInitialCondition(input_signal, output_signal):
 
     # Get data from Signals
     y = output_signal.data
@@ -25,19 +25,21 @@ def observerKalmanIdentificationAlgorithmObserver(input_signal, output_signal):
 
     # Get value of p that maximizes (r+m)p + r <= l: as a result n/m <= p <= l/(r+m)-r. Here n = 12.
     p = max(int(12/output_dimension), int(number_steps/(input_dimension+output_dimension) - input_dimension))
-
+    print('p = ', p)
+    print('number_steps = ', number_steps)
     # Build matrix U
-    U = np.zeros([(input_dimension + output_dimension) * p + input_dimension, number_steps])
-    U[0 * input_dimension:(0 + 1) * input_dimension, 0:number_steps] = u[:, 0:number_steps - 0]
+    U = np.zeros([(input_dimension + output_dimension) * p + input_dimension, number_steps - p])
+    print('Shape of U = ', U.shape)
+    U[0 * input_dimension:(0 + 1) * input_dimension, :] = u[:, p:number_steps]
     for i in range(0, p):
-        U[i * (input_dimension + output_dimension) + input_dimension:(i + 1) * (input_dimension + output_dimension) + input_dimension,
-        (i + 1):number_steps] = np.concatenate((u[:, 0:number_steps - 1 - i], y[:, 0:number_steps - 1 - i]), axis=0)
+        U[i * (input_dimension + output_dimension) + input_dimension:(i + 1) * (input_dimension + output_dimension) + input_dimension, :] = np.concatenate((u[:, p - 1 - i:number_steps - 1 - i], y[:, p - 1 - i:number_steps - 1 - i]), axis=0)
+
 
     # Get Y
-    Y = np.matmul(y, LA.pinv(U))
+    Y = np.matmul(y[:, p:number_steps], LA.pinv(U))
     print('p = ', p)
     print('Shape U', U.shape)
-    print('Error OKID: ', LA.norm(y-np.matmul(Y, U)))
+    print('Error OKID: ', LA.norm(y[:, p:number_steps]-np.matmul(Y, U)))
 
     # Get observer Markov parameters
     observer_markov_parameters = [Y[:, 0:input_dimension]]

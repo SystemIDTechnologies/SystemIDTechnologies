@@ -31,6 +31,7 @@ def eigenSystemRealizationAlgorithm(markov_parameters, state_dimension):
             H1[i * output_dimension:(i + 1) * output_dimension, j * input_dimension:(j + 1) * input_dimension] = markov_parameters[i + j + 2]
 
     # SVD H(0)
+    print(H0.shape)
     (R, sigma, St) = LA.svd(H0, full_matrices=True)
     Sigma = np.diag(sigma)
 
