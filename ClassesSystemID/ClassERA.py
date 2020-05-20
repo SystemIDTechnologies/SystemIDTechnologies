@@ -10,11 +10,17 @@ Python: 3.7.7
 
 from SystemIDAlgorithms.EigenSystemRealizationAlgorithm import eigenSystemRealizationAlgorithm
 from SystemIDAlgorithms.EigenSystemRealizationAlgorithmFromInitialConditionResponse import eigenSystemRealizationAlgorithmFromInitialConditionResponse
+from SystemIDAlgorithms.ERAtestNucNormOpti import eRAtestNucNormOpti
 
 
 class ERA:
     def __init__(self, markov_parameters, state_dimension):
         self.A, self.B, self.C, self.D, self.H0, self.H1, self.R, self.Sigma, self.St, self.Rn, self.Sigman, self.Snt = eigenSystemRealizationAlgorithm(markov_parameters, state_dimension)
+
+
+class ERANucNorm:
+    def __init__(self, markov_parameters, state_dimension):
+        self.A, self.B, self.C, self.D, self.H0, self.H1, self.R, self.Sigma, self.St, self.Rn, self.Sigman, self.Snt = eRAtestNucNormOpti(markov_parameters, state_dimension)
 
 
 class ERAFromInitialConditionResponse:

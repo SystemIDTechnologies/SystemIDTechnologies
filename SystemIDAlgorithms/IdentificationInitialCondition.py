@@ -23,7 +23,7 @@ def identificationInitialCondition(input_signal, output_signal, A, B, C, D, tk):
     # Number of steps and dt
     number_steps = input_signal.number_steps
     p = max(int(12 / output_dimension), int(number_steps / (input_dimension + output_dimension) - input_dimension))
-    number_steps = min(number_steps, p)
+    #number_steps = min(number_steps, p)
     dt = input_signal.dt
 
     # Data

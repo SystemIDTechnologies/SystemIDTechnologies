@@ -14,7 +14,7 @@ from scipy.linalg import expm
 
 
 class AutomobileSystemDynamics:
-    def __init__(self, dt, mass, moment_inertia, spring_constant1, spring_constant2, damping_coefficient1, damping_coefficient2, distance1, distance2, force_coefficient1, measurements1, measurements2):
+    def __init__(self, dt, mass, moment_inertia, spring_constant1, spring_constant2, damping_coefficient1, damping_coefficient2, distance1, distance2, force_coefficient, measurements1, measurements2):
         self.state_dimension = 4
         self.input_dimension = 1
         self.output_dimension = len(measurements1) + len(measurements2)
@@ -28,7 +28,7 @@ class AutomobileSystemDynamics:
         self.damping_coefficient2 = damping_coefficient2
         self.distance1 = distance1
         self.distance2 = distance2
-        self.force_coefficient1 = force_coefficient1
+        self.force_coefficient = force_coefficient
         self.measurements1 = measurements1
         self.measurements2 = measurements2
         self.M = np.zeros([2, 2])
@@ -52,7 +52,7 @@ class AutomobileSystemDynamics:
         self.Ad = expm(self.Ac * self.dt)
 
         self.B2 = np.zeros([int(self.state_dimension / 2), self.input_dimension])
-        self.B2[0, 0] = self.force_coefficient1
+        self.B2[0, 0] = self.force_coefficient
         self.Bc = np.zeros([self.state_dimension, self.input_dimension])
         self.Bc[2:4, 0:2] = np.matmul(inv(self.M), self.B2)
         self.Bd = np.matmul(np.matmul((self.Ad - np.eye(self.state_dimension)), inv(self.Ac)), self.Bc)

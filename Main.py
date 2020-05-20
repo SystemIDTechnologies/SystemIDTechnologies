@@ -18,10 +18,10 @@ from ClassesSystems.ClassTwoMassSpringDamperDynamics import TwoMassSpringDamperD
 from ClassesSystems.ClassThreeMassSpringDamperDynamics import *
 from ClassesSystems.ClassAutomobileSystemDynamics import AutomobileSystemDynamics
 from ClassesGeneral.ClassSystem import LinearSystem
-from ClassesGeneral.ClassSignal import Signal, OutputSignal, subtract2Signals
+from ClassesGeneral.ClassSignal import Signal, OutputSignal, subtract2Signals, add2Signals
 from ClassesGeneral.ClassExperiments import Experiments
 from ClassesSystemID.ClassOKID import *
-from ClassesSystemID.ClassERA import ERA, ERAFromInitialConditionResponse
+from ClassesSystemID.ClassERA import *
 from SystemIDAlgorithms.IdentificationInitialCondition import identificationInitialCondition
 from SystemIDAlgorithms.GetMarkovParameters import getMarkovParameters
 from Plotting.PlotEigenValues import plotEigenValues
@@ -30,101 +30,211 @@ from Plotting.PlotSingularValues import plotSingularValues
 from Plotting.PlotMarkovParameters2 import plotMarkovParameters2
 
 
-## Parameters of the Dynamics - From system parameters
-dt = 0.1
-mass1 = 1000
-mass2 = 1800
-mass3 = 2500
-moment_inertia = 206
-spring_constant1 = 3600
-spring_constant2 = 3800
-spring_constant3 = 2200
-damping_coefficient1 = 60
-damping_coefficient2 = 40
-damping_coefficient3 = 50
-distance1 = 1.4
-distance2 = 1.7
-force_coefficient1 = 1
-force_coefficient2 = 2
-force_coefficient3 = 3
-measurements1 = ['position', 'velocity', 'acceleration']
-measurements2 = ['position', 'velocity', 'acceleration']
-measurements3 = ['position', 'velocity', 'acceleration']
+## Get the system and initial condition type
+systemName = 'Two Mass Spring Damper System'
+initialCondition = 'Random'
+inputSignalName = 'White Noise'
 
 
-## Get an instance of the dynamics
-#Dynamics = MassSpringDamperDynamics(dt, mass1, spring_constant1, damping_coefficient1, force_coefficient1, measurements1)
-Dynamics = TwoMassSpringDamperDynamics(dt, mass1, mass2, spring_constant1, spring_constant2, damping_coefficient1, damping_coefficient2, force_coefficient1, force_coefficient2, measurements1, measurements2)
-#Dynamics = ThreeMassSpringDamperDynamics(dt, mass1, mass2, mass3, spring_constant1, spring_constant2, spring_constant3, damping_coefficient1, damping_coefficient2, damping_coefficient3, force_coefficient1, force_coefficient2, force_coefficient3, measurements1, measurements2, measurements3)
-#Dynamics = AutomobileSystemDynamics(dt, mass1, moment_inertia, spring_constant1, spring_constant2, damping_coefficient1, damping_coefficient2, distance1, distance2, force_coefficient1, measurements1, measurements2)
+
+## Define the dynamics
+if systemName == 'Mass Spring Damper System':
+    dt = 0.1
+    mass = 1
+    spring_constant = 2
+    damping_coefficient = 0.1
+    force_coefficient = 1
+    measurements = ['position', 'velocity', 'acceleration']
+    Dynamics = MassSpringDamperDynamics(dt, mass, spring_constant, damping_coefficient, force_coefficient, measurements)
+
+if systemName == 'Two Mass Spring Damper System':
+    dt = 0.1
+    mass1 = 1
+    mass2 = 1.8
+    spring_constant1 = 1
+    spring_constant2 = 3
+    damping_coefficient1 = 0.3
+    damping_coefficient2 = 0.4
+    force_coefficient1 = 1
+    force_coefficient2 = 2
+    measurements1 = ['position', 'velocity', 'acceleration']
+    measurements2 = ['position', 'velocity', 'acceleration']
+    Dynamics = TwoMassSpringDamperDynamics(dt, mass1, mass2, spring_constant1, spring_constant2, damping_coefficient1, damping_coefficient2, force_coefficient1, force_coefficient2, measurements1, measurements2)
+
+if systemName == 'Three Mass Spring Damper System':
+    dt = 0.1
+    mass1 = 1
+    mass2 = 1.8
+    mass3 = 1.4
+    spring_constant1 = 1
+    spring_constant2 = 3
+    spring_constant3 = 2.2
+    damping_coefficient1 = 0.3
+    damping_coefficient2 = 0.4
+    damping_coefficient3 = 0.05
+    force_coefficient1 = 1
+    force_coefficient2 = 2
+    force_coefficient3 = 1.5
+    measurements1 = ['position', 'velocity', 'acceleration']
+    measurements2 = ['position', 'velocity', 'acceleration']
+    measurements3 = ['position', 'velocity', 'acceleration']
+    Dynamics = ThreeMassSpringDamperDynamics(dt, mass1, mass2, mass3, spring_constant1, spring_constant2, spring_constant3, damping_coefficient1, damping_coefficient2, damping_coefficient3, force_coefficient1, force_coefficient2, force_coefficient3, measurements1, measurements2, measurements3)
+
+if systemName == 'Automobile system':
+    dt = 0.1
+    mass = 1800
+    moment_inertia = 200
+    spring_constant1 = 1500
+    spring_constant2 = 3000
+    damping_coefficient1 = 350
+    damping_coefficient2 = 400
+    distance1 = 1.4
+    distance2 = 1.7
+    force_coefficient = 1
+    measurements1 = ['position', 'velocity', 'acceleration']
+    measurements2 = ['position', 'velocity', 'acceleration']
+    Dynamics = AutomobileSystemDynamics(dt, mass, moment_inertia, spring_constant1, spring_constant2, damping_coefficient1, damping_coefficient2, distance1, distance2, force_coefficient, measurements1, measurements2)
+
 
 
 ## Parameters of the Linear System
-frequency = 2     # From input signal frequency
-#initial_condition = np.zeros(Dynamics.state_dimension)
-initial_condition = 1*np.random.randn(Dynamics.state_dimension)      # Initial condition of the system - 0 here
+frequency = 5    # From input signal frequency
+if initialCondition == 'Zero':
+    initial_condition = np.zeros(Dynamics.state_dimension)
+if initialCondition == 'Random':
+    initial_condition = 1 * np.random.randn(Dynamics.state_dimension)
 initial_states = [(initial_condition, 0)]
-name = 'Three Mass Spring Damper System'
+
 
 
 ## Define the corresponding Linear System
-# number_experiments = 5
-# systems = []
-# for i in range(number_experiments):
-#     initial_states = [(1*np.random.randn(Dynamics.state_dimension), 0)]
-#     systems.append(LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, initial_states, name, Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D))
-Sys = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, initial_states, name, Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D)
+if inputSignalName == 'Zero':
+    number_experiments = 1
+if inputSignalName == 'Zero':
+    systems = []
+    for i in range(number_experiments):
+        initial_states = [(1*np.random.randn(Dynamics.state_dimension), 0)]
+        systems.append(LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, initial_states, systemName, Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D))
+else:
+    Sys = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, initial_states, systemName, Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D)
+
 
 
 ## Parameters of the Input Signal - From input signal parameters
-total_time = 2000
-name = 'Input Signal - White noise'
-mean = np.zeros(Dynamics.input_dimension)
-standard_deviation = 5 * np.eye(Dynamics.input_dimension)
-magnitude_impulse = np.array([10])
+total_time = 100
+if inputSignalName == 'Impulse':
+    magnitude_impulse = 1 * np.ones(Dynamics.input_dimension)
+if inputSignalName == 'White Noise':
+    mean = np.zeros(Dynamics.input_dimension)
+    standard_deviation = 2 * np.eye(Dynamics.input_dimension)
+
 
 
 ## Define the Input Signal
-S1 = Signal(total_time, frequency, Dynamics.input_dimension, name, mean=mean, standard_deviation=standard_deviation)
-#S1 = Signal(total_time, frequency, Dynamics.input_dimension, name, magnitude_impulse=magnitude_impulse)
-# input_signals = []
-# for i in range(number_experiments):
-#     input_signals.append(Signal(total_time, frequency, Dynamics.input_dimension, name))
+if inputSignalName == 'Impulse':
+    S1 = Signal(total_time, frequency, Dynamics.input_dimension, inputSignalName, magnitude_impulse=magnitude_impulse)
+if inputSignalName == 'White Noise':
+    S1 = Signal(total_time, frequency, Dynamics.input_dimension, inputSignalName, mean=mean, standard_deviation=standard_deviation)
+if inputSignalName == 'Zero':
+    S1 = Signal(total_time, frequency, Dynamics.input_dimension, inputSignalName)
+    input_signals = []
+    for i in range(number_experiments):
+        input_signals.append(S1)
+
 
 
 ## Define the Output Signal
-S2 = OutputSignal(S1, Sys, 'Output Signal')
-#Exp = Experiments(systems, input_signals)
+if inputSignalName == 'Zero':
+    Exp = Experiments(systems, input_signals)
+else:
+    S2_ini = OutputSignal(S1, Sys, 'Output Signal')
 
 
-## Calculate Markov Parameters
-markov_parameters = OKIDObserverWithInitialCondition(S1, S2).markov_parameters
-markov_parameters_true = getMarkovParameters(Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D, S1.number_steps)
-ERA1 = ERA(markov_parameters, Dynamics.state_dimension)
-#ERA1 = ERAFromInitialConditionResponse(Exp.output_signals, Dynamics.state_dimension)
-x0 = identificationInitialCondition(S1, S2, ERA1.A, ERA1.B, ERA1.C, ERA1.D, 0)
+
+## Add some noise
+snr = 1e2
+if inputSignalName == 'Zero':
+    for i in range(number_experiments):
+        output_signal = Exp.output_signals[i]
+        mean_noise = np.zeros(Dynamics.output_dimension)
+        standard_deviation_noise = np.eye(Dynamics.output_dimension) * np.mean(output_signal.data ** 2) / snr
+        print(standard_deviation_noise)
+        SNoise = Signal(total_time, frequency, Dynamics.output_dimension, 'Noise', mean=mean_noise, standard_deviation=standard_deviation_noise)
+        Exp.output_signals[i] = add2Signals(output_signal, SNoise)
+    S2 = Exp.output_signals[0]
+else:
+    mean_noise = np.zeros(Dynamics.output_dimension)
+    standard_deviation_noise = np.eye(Dynamics.output_dimension) * np.mean(S2_ini.data ** 2) / snr
+    SNoise = Signal(total_time, frequency, Dynamics.output_dimension, 'Noise', mean=mean_noise, standard_deviation=standard_deviation_noise)
+    S2 = add2Signals(S2_ini, SNoise)
+
+
+## Calculate Markov Parameters and Identified system
+markov_parameters_true = getMarkovParameters(Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D, total_time*frequency + 1)
+if inputSignalName == 'Zero':
+    ERA1 = ERAFromInitialConditionResponse(Exp.output_signals, Dynamics.state_dimension)
+elif inputSignalName == 'Impulse':
+    markov_parameters = OKID(S1, S2).markov_parameters
+    ERA1 = ERA(markov_parameters, Dynamics.state_dimension)
+else:
+    if initialCondition == 'Zero':
+        markov_parameters = OKIDObserver(S1, S2).markov_parameters
+        ERA1 = ERA(markov_parameters, Dynamics.state_dimension)
+    else:
+        markov_parameters = OKIDObserverWithInitialCondition(S1, S2).markov_parameters
+        ERA1 = ERA(markov_parameters, Dynamics.state_dimension)
+        x0 = identificationInitialCondition(S1, S2, ERA1.A, ERA1.B, ERA1.C, ERA1.D, 0)
+
 
 
 ## Define Identified System
-SysID = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, [(x0[:, 0], 0)], 'Identified System', ERA1.A, Dynamics.B, ERA1.C, Dynamics.D)
+if inputSignalName == 'Zero':
+    SysID = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, [(ERA1.x0_id[:, 0], 0)], 'Identified System', ERA1.A, Dynamics.B, ERA1.C, Dynamics.D)
+elif inputSignalName == 'Impulse':
+    SysID = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, initial_states, 'Identified System', ERA1.A, ERA1.B, ERA1.C, ERA1.D)
+else:
+    if initialCondition == 'Zero':
+        SysID = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, initial_states, 'Identified System', ERA1.A, ERA1.B, ERA1.C, ERA1.D)
+    else:
+        SysID = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, [(x0[:, 0], 0)], 'Identified System', ERA1.A, ERA1.B, ERA1.C, ERA1.D)
+
 
 
 ## Define the Identified Output Signal
-S2ID = OutputSignal(S1, SysID, 'Identified Output Signal')
+if inputSignalName == 'Zero':
+    S2ID = OutputSignal(input_signals[0], SysID, 'Identified Output Signal')
+else:
+    S2ID = OutputSignal(S1, SysID, 'Identified Output Signal')
+
 
 
 ## Plotting
 plotSignals([[S1], [S2, S2ID], [subtract2Signals(S2, S2ID)]], 1)
 plotEigenValues([Sys, SysID], 2)
 plotSingularValues([ERA1], ['IdentifiedSystem'], 3)
-plotMarkovParameters2(markov_parameters, markov_parameters_true, 'OKID', 'True', 4)
+if inputSignalName != 'Zero':
+    plotMarkovParameters2(markov_parameters, markov_parameters_true, 'OKID', 'True', 4)
 
 
 
-# X0 = np.concatenate((systems[0].initial_states[0][0][:, None],
-#                      systems[1].initial_states[0][0][:, None],
-#                      systems[2].initial_states[0][0][:, None],
-#                      systems[3].initial_states[0][0][:, None],
-#                      systems[4].initial_states[0][0][:, None]), axis=1)
-# T = np.matmul(X0, LA.pinv(ERA1.x0_id))
-# AID = np.matmul(T, np.matmul(ERA1.A(0), inv(T)))
+
+
+
+
+
+
+
+
+## Plot number 1 - Input Signal
+# x = np.linspace(0, S1.total_time, S1.number_steps)
+# y = S1.data
+
+
+## Plot number 2 - Output Signal
+# x = np.linspace(0, S2.total_time, S2.number_steps)
+# y = S2.data, S2ID.data
+
+
+## Plot number 3 - Error between S2 and S2ID
+# x = np.linspace(0, S2.total_time, S2.number_steps)
+# y = subtract2Signals(S2, S2ID).data
