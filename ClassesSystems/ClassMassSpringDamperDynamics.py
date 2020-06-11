@@ -25,6 +25,8 @@ class MassSpringDamperDynamics:
         self.damping_coefficient = damping_coefficient
         self.force_coefficient = force_coefficient
         self.measurements = measurements
+        self.total_measurements = []
+        self.units = []
         self.M = np.zeros([1, 1])
         self.K = np.zeros([1, 1])
         self.Z = np.zeros([1, 1])
@@ -52,16 +54,23 @@ class MassSpringDamperDynamics:
         if 'position' in self.measurements:
             self.Cp[i, 0] = 1
             i += 1
+            self.total_measurements.append('Position')
+            self.units.append('m')
         if 'velocity' in self.measurements:
             self.Cv[i, 0] = 1
             i += 1
+            self.total_measurements.append('Velocity')
+            self.units.append('m/s')
         if 'acceleration' in self.measurements:
             self.Ca[i, 0] = 1
             i += 1
+            self.total_measurements.append('Acceleration')
+            self.units.append('m/s^2')
         self.Cd[:, 0:int(self.state_dimension / 2)] = self.Cp - np.matmul(self.Ca, np.matmul(inv(self.M), self.K))
         self.Cd[:, int(self.state_dimension / 2): self.state_dimension] = self.Cv - np.matmul(self.Ca, np.matmul(inv(self.M), self.Z))
 
         self.Dd = np.matmul(self.Ca, np.matmul(inv(self.M), self.B2))
+
 
     def A(self, tk):
         return self.Ad

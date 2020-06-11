@@ -10,7 +10,6 @@ Python: 3.7.7
 
 from SystemIDAlgorithms.EigenSystemRealizationAlgorithm import eigenSystemRealizationAlgorithm
 from SystemIDAlgorithms.EigenSystemRealizationAlgorithmFromInitialConditionResponse import eigenSystemRealizationAlgorithmFromInitialConditionResponse
-from SystemIDAlgorithms.ERAtestNucNormOpti import eRAtestNucNormOpti
 
 
 class ERA:

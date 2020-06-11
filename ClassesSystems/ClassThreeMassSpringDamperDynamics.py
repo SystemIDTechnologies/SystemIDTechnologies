@@ -35,6 +35,8 @@ class ThreeMassSpringDamperDynamics:
         self.measurements1 = measurements1
         self.measurements2 = measurements2
         self.measurements3 = measurements3
+        self.total_measurements = []
+        self.units = []
         self.M = np.zeros([3, 3])
         self.K = np.zeros([3, 3])
         self.Z = np.zeros([3, 3])
@@ -82,30 +84,48 @@ class ThreeMassSpringDamperDynamics:
         if 'position' in self.measurements1:
             self.Cp[i, 0] = 1
             i += 1
+            self.total_measurements.append('Position 1')
+            self.units.append('m')
         if 'position' in self.measurements2:
             self.Cp[i, 1] = 1
             i += 1
+            self.total_measurements.append('Position 2')
+            self.units.append('m')
         if 'position' in self.measurements3:
             self.Cp[i, 2] = 1
             i += 1
+            self.total_measurements.append('Position 3')
+            self.units.append('m')
         if 'velocity' in self.measurements1:
             self.Cv[i, 0] = 1
             i += 1
+            self.total_measurements.append('Velocity 1')
+            self.units.append('m/s')
         if 'velocity' in self.measurements2:
             self.Cv[i, 1] = 1
             i += 1
+            self.total_measurements.append('Velocity 2')
+            self.units.append('m/s')
         if 'velocity' in self.measurements3:
             self.Cv[i, 2] = 1
             i += 1
+            self.total_measurements.append('Velocity 3')
+            self.units.append('m/s')
         if 'acceleration' in self.measurements1:
             self.Ca[i, 0] = 1
             i += 1
+            self.total_measurements.append('Acceleration 1')
+            self.units.append('m/s^2')
         if 'acceleration' in self.measurements2:
             self.Ca[i, 1] = 1
             i += 1
+            self.total_measurements.append('Acceleration 2')
+            self.units.append('m/s^2')
         if 'acceleration' in self.measurements3:
             self.Ca[i, 2] = 1
             i += 1
+            self.total_measurements.append('Acceleration 3')
+            self.units.append('m/s^2')
         self.Cd[:, 0:int(self.state_dimension / 2)] = self.Cp - np.matmul(self.Ca, np.matmul(inv(self.M), self.K))
         self.Cd[:, int(self.state_dimension / 2): self.state_dimension] = self.Cv - np.matmul(self.Ca, np.matmul(inv(self.M), self.Z))
 

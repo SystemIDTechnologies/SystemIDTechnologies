@@ -25,15 +25,38 @@ class Signal:
         self.mean = kwargs.get('mean', np.array([[None]]))
         self.standard_deviation = kwargs.get('standard_deviation', np.array([[None]]))
         self.magnitude_impulse = kwargs.get('magnitude_impulse', np.array([[None]]))
+        self.magnitude_peak = kwargs.get('magnitude_peak', np.array([[None]]))
+        self.magnitude_sinusoid = kwargs.get('magnitude_sinusoid', np.array([[None]]))
+        self.frequency_sinusoid = kwargs.get('frequency_sinusoid', np.array([[None]]))
+        self.maximum_ramp = kwargs.get('maximum_ramp', np.array([[None]]))
+        self.exponential_decay_rate = kwargs.get('exponential_decay_rate', np.array([[None]]))
         self.data = kwargs.get('data', np.array([[None]]))
 
-        if np.max(self.mean) or np.max(self.standard_deviation):
+        if np.max(self.maximum_ramp) or np.max(self.exponential_decay_rate):
+            self.data = np.zeros([self.dimension, self.number_steps])
+            for i in range(self.dimension):
+                self.data[i, 0:int(self.number_steps/3)] = np.linspace(0, self.maximum_ramp[i], int(self.number_steps/3))
+                self.data[i, int(self.number_steps/3):2*int(self.number_steps/3)] = self.standard_deviation[i, i]*np.random.randn(2*int(self.number_steps/3)-int(self.number_steps/3)) + self.maximum_ramp[i]
+                self.data[i, 2*int(self.number_steps / 3):self.number_steps] = self.data[i, 2*int(self.number_steps/3)-1] * np.exp(self.exponential_decay_rate[i]*np.linspace(0, self.number_steps-2*int(self.number_steps / 3), self.number_steps-2*int(self.number_steps / 3)))
+            self.signal_type = 'combination'
+        elif np.max(self.mean) or np.max(self.standard_deviation):
             self.data = np.matmul(self.standard_deviation, np.random.randn(self.dimension, self.number_steps)) + self.mean[:,np.newaxis]
             self.signal_type = 'white_noise'
         elif np.max(self.magnitude_impulse):
             self.data = np.zeros([self.dimension, self.number_steps])
             self.data[:, 0] = self.magnitude_impulse[0]
             self.signal_type = 'impulse'
+        elif np.max(self.magnitude_peak):
+            self.data = np.zeros([self.dimension, self.number_steps])
+            for i in range(self.dimension):
+                self.data[i, 0:int(self.number_steps/2)+1] = np.linspace(0, self.magnitude_peak[i], int(self.number_steps/2)+1)
+                self.data[i, int(self.number_steps/2):self.number_steps] = np.linspace(self.magnitude_peak[i], 0, self.number_steps-int(self.number_steps/2))
+            self.signal_type = 'triangle'
+        elif np.max(self.magnitude_sinusoid) or np.max(self.frequency_sinusoid):
+            self.data = np.zeros([self.dimension, self.number_steps])
+            for i in range(self.dimension):
+                self.data[i, :] = self.magnitude_sinusoid[i] * np.sin(2*np.pi*self.frequency_sinusoid[i]*np.linspace(0, self.total_time, self.number_steps))
+            self.signal_type = 'sinusoid'
         elif np.max(self.data):
             self.signal_type = 'external'
         else:
