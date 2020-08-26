@@ -10,6 +10,9 @@ Python: 3.7.7
 
 import numpy as np
 from numpy import linalg as LA
+import pandas as pd
+import cvxpy as cp
+import matplotlib.pyplot as plt
 
 
 
@@ -33,9 +36,10 @@ from Plotting.PlotMarkovParameters2 import plotMarkovParameters2
 
 
 ## Get the system and initial condition type
-systemName = 'Customized'
+systemName = 'Three Mass Spring Damper System'
 initialCondition = 'Random'
 inputSignalName = 'White Noise'
+noise = True
 
 
 
@@ -106,8 +110,8 @@ if systemName == 'Customized':
     Dynamics = CustomizedDiscreteTimeInvariantDynamics(Ad, Bd, Cd, Dd)
 
 
-## Parameters of the Linear System
-frequency = 1    # From input signal frequency
+## Initial Condition of the Linear System
+frequency = 5    # From input signal frequency
 if initialCondition == 'Zero':
     initial_condition = np.zeros(Dynamics.state_dimension)
 if initialCondition == 'Random':
@@ -135,7 +139,7 @@ else:
 
 
 ## Parameters of the Input Signal - From input signal parameters
-total_time = 200
+total_time = 50
 number_steps = total_time * frequency + 1
 if inputSignalName == 'Impulse':
     magnitude_impulse = 1 * np.ones(Dynamics.input_dimension)
@@ -182,28 +186,35 @@ else:
 
 
 ## Add some noise
-snr = 1e20
-if inputSignalName == 'Zero':
-    for i in range(number_experiments):
-        output_signal = Exp.output_signals[i]
+if noise:
+    snr = 1e4
+    if inputSignalName == 'Zero':
+        for i in range(number_experiments):
+            output_signal = Exp.output_signals[i]
+            mean_noise = np.zeros(Dynamics.output_dimension)
+            standard_deviation_noise = np.eye(Dynamics.output_dimension) * np.mean(output_signal.data ** 2) / snr
+            print(standard_deviation_noise)
+            SNoise = Signal(total_time, frequency, Dynamics.output_dimension, 'Noise', mean=mean_noise, standard_deviation=standard_deviation_noise)
+            Exp.output_signals[i] = add2Signals(output_signal, SNoise)
+        S2 = Exp.output_signals[0]
+    else:
         mean_noise = np.zeros(Dynamics.output_dimension)
-        standard_deviation_noise = np.eye(Dynamics.output_dimension) * np.mean(output_signal.data ** 2) / snr
-        print(standard_deviation_noise)
+        standard_deviation_noise = np.eye(Dynamics.output_dimension) * np.mean(S2_ini.data**2) / snr
         SNoise = Signal(total_time, frequency, Dynamics.output_dimension, 'Noise', mean=mean_noise, standard_deviation=standard_deviation_noise)
-        Exp.output_signals[i] = add2Signals(output_signal, SNoise)
-    S2 = Exp.output_signals[0]
+        S2 = add2Signals(S2_ini, SNoise)
 else:
-    mean_noise = np.zeros(Dynamics.output_dimension)
-    standard_deviation_noise = np.eye(Dynamics.output_dimension) * np.mean(S2_ini.data ** 2) / snr
-    SNoise = Signal(total_time, frequency, Dynamics.output_dimension, 'Noise', mean=mean_noise, standard_deviation=standard_deviation_noise)
-    S2 = add2Signals(S2_ini, SNoise)
+    if inputSignalName == 'Zero':
+        S2 = Exp.output_signals[0]
+    else:
+        S2 = S2_ini
+
 
 
 ## Calculate Markov Parameters and Identified system
 if inputSignalName == 'Zero':
-    markov_parameters_true = getInitialConditionResponseMarkovParameters(Dynamics.A, Dynamics.C, initial_states[0][0][0], number_steps)
-    ERA1 = ERAFromInitialConditionResponse(Exp.output_signals, Dynamics.state_dimension)
-    markov_parameters = getInitialConditionResponseMarkovParameters(ERA1.A, ERA1.C, ERA1.x0_id[:, 0], number_steps)
+    markov_parameters_true = getInitialConditionResponseMarkovParameters(Dynamics.A, Dynamics.C, number_steps)
+    ERA1 = ERAFromInitialConditionResponse(Exp.output_signals, Dynamics.state_dimension, Dynamics.input_dimension)
+    markov_parameters = getInitialConditionResponseMarkovParameters(ERA1.A, ERA1.C, number_steps)
 elif inputSignalName == 'Impulse':
     markov_parameters_true = getMarkovParameters(Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D, number_steps)
     markov_parameters = OKID(S1, S2).markov_parameters
@@ -211,10 +222,12 @@ elif inputSignalName == 'Impulse':
 else:
     markov_parameters_true = getMarkovParameters(Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D, number_steps)
     if initialCondition == 'Zero':
-        markov_parameters = OKIDObserver(S1, S2).markov_parameters
+        OKID1 = OKIDObserver(S1, S2)
+        markov_parameters = OKID1.markov_parameters
         ERA1 = ERA(markov_parameters, Dynamics.state_dimension)
     else:
-        markov_parameters = OKIDObserverWithInitialCondition(S1, S2).markov_parameters
+        OKID1 = OKIDObserverWithInitialCondition(S1, S2)
+        markov_parameters = OKID1.markov_parameters
         ERA1 = ERA(markov_parameters, Dynamics.state_dimension)
         x0 = identificationInitialCondition(S1, S2, ERA1.A, ERA1.B, ERA1.C, ERA1.D, 0)
 
@@ -222,7 +235,7 @@ else:
 
 ## Define Identified System
 if inputSignalName == 'Zero':
-    SysID = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, [(ERA1.x0_id[:, 0], 0)], 'Identified System', ERA1.A, Dynamics.B, ERA1.C, Dynamics.D)
+    SysID = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, [(ERA1.x0[:, 0], 0)], 'Identified System', ERA1.A, ERA1.B, ERA1.C, ERA1.D)
 elif inputSignalName == 'Impulse':
     SysID = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, initial_states, 'Identified System', ERA1.A, ERA1.B, ERA1.C, ERA1.D)
 else:
@@ -240,16 +253,92 @@ else:
     S2ID = OutputSignal(S1, SysID, 'Identified Output Signal')
 
 
-
-## Plotting
-plotSignals([[S1], [S2, S2ID], [subtract2Signals(S2, S2ID)]], 1)
-plotEigenValues([Sys, SysID], 2)
-plotSingularValues([ERA1], ['IdentifiedSystem'], 3)
-plotMarkovParameters2(markov_parameters, markov_parameters_true, 'OKID', 'True', 4)
-
-
+#
+# # Plotting
+# plotSignals([[S1], [S2_ini, S2, S2ID], [subtract2Signals(S2, S2ID)]], 1)
+# plotEigenValues([Sys, SysID], 2)
+# plotSingularValues([ERA1], ['IdentifiedSystem'], 3)
+# plotMarkovParameters2(markov_parameters, markov_parameters_true, 'OKID', 'True', 4)
 
 
+# Nuclear norm
+#n=28
+alpha = 0.000000000288
+n_iter = 1
+r, c = ERA1.H0.shape
+print(ERA1.H0.shape)
+legend = ['initial']
+
+orders_list = np.zeros([min(r, c), n_iter])
+
+significant = []
+unsignificant = []
+
+(R, sigma, St) = LA.svd(ERA1.H0, full_matrices=True)
+
+change = False
+
+# plt.figure(401, figsize=[10, 8])
+# plt.semilogy(sigma, 'o')
+
+for i in range(n_iter):
+    print('i = ', i)
+    H0e = cp.Variable(shape=ERA1.H0.shape)
+    objective = cp.Minimize(cp.norm(H0e, "nuc"))
+    constraints = [cp.norm(ERA1.H0 - H0e, "fro") / np.sqrt(r*c) <= alpha * (np.mean(np.diag(LA.inv(np.matmul(OKID1.U.T, OKID1.U)))) * np.mean(np.diag(standard_deviation_noise)))]
+    prob = cp.Problem(objective, constraints)
+    prob.solve()
+    (Re, sigmae, Ste) = LA.svd(H0e.value, full_matrices=True)
+    orders = np.floor(np.log10([sigmae]))[0]
+    orders_list[:, i] = sigmae
+    # index_sep = 29
+    # for j in range(1, len(orders)):
+    #     if orders[j] <= orders[j-1] - 5:
+    #         index_sep = j
+    #         change = True
+    #         if j == len(orders)-1 and change:
+    #             index_sep = j
+    # significant.append(index_sep)
+    # unsignificant.append(len(orders)-index_sep)
+    plt.semilogy(sigmae, '*')
+    legend.append('alpha = ' + str(alpha))
+    alpha = alpha + 0.5
+
+plt.legend(legend, loc='upper right')
+# plt.show()
+
+
+# plt.figure(501)
+# plt.semilogy(np.linspace(1, n_iter, n_iter), orders_list[0, :])
+# plt.semilogy(np.linspace(1, n_iter, n_iter), orders_list[1, :])
+# plt.semilogy(np.linspace(1, n_iter, n_iter), orders_list[2, :])
+# plt.semilogy(np.linspace(1, n_iter, n_iter), orders_list[3, :])
+# plt.semilogy(np.linspace(1, n_iter, n_iter), orders_list[4, :])
+# plt.semilogy(np.linspace(1, n_iter, n_iter), orders_list[5, :])
+# plt.semilogy(np.linspace(1, n_iter, n_iter), orders_list[6, :])
+# plt.semilogy(np.linspace(1, n_iter, n_iter), orders_list[7, :])
+# plt.semilogy(np.linspace(1, n_iter, n_iter), orders_list[8, :])
+# plt.semilogy(np.linspace(1, n_iter, n_iter), orders_list[9, :])
+# plt.semilogy(np.linspace(1, n_iter, n_iter), orders_list[10, :])
+# plt.show()
+
+
+#print('Frobenius norm:', LA.norm(H0 - H0e.value)/(r*c))
+
+
+
+#plt.semilogx([10, 20, 50, 100, 1000, 10000, 100000, 1000000], [0.11, 0.065, 0.09, 0.068, 0.068, 0.065, 0.065, 0.067])
+#plt.show()
+
+## Plotting PhD
+plt.figure(1, figsize=(5, 4))
+plt.semilogy(sigma, 'o', color=(0 / 255, 162 / 255, 255 / 255))
+plt.semilogy(sigmae, '*', color=(203 / 255, 41 / 255, 123 / 255))
+legend = ['Original SVD', 'Optimized SVD']
+plt.legend(legend, loc='upper right')
+plt.ylabel('Value of singular values')
+plt.xlabel('# of singular values')
+plt.show()
 
 
 
@@ -257,16 +346,41 @@ plotMarkovParameters2(markov_parameters, markov_parameters_true, 'OKID', 'True',
 
 
 
-## Plot number 1 - Input Signal
-# x = np.linspace(0, S1.total_time, S1.number_steps)
-# y = S1.data
 
 
-## Plot number 2 - Output Signal
-# x = np.linspace(0, S2.total_time, S2.number_steps)
-# y = S2.data, S2ID.data
 
 
-## Plot number 3 - Error between S2 and S2ID
-# x = np.linspace(0, S2.total_time, S2.number_steps)
-# y = subtract2Signals(S2, S2ID).data
+# plt.subplot(3, 2, 1)
+# plt.plot(time[0:120], S1_nom.data[1, 0:120], color=(0 / 255, 0 / 255, 255 / 255))
+# plt.plot(time[0:120], S1_test.data[1, 0:120], color=(0 / 255, 162 / 255, 255 / 255))
+# plt.ylabel('u, du')
+# plt.xlabel('Time [s]')
+# plt.legend(['Nominal input', 'Input deviation'], loc='upper right')
+# plt.subplot(3, 2, 3)
+# plt.plot(time[0:120], S2_test.data[0, 0:120], color=(0 / 255, 0 / 255, 255 / 255))
+# plt.plot(time[0:120], S2ID_test.data[0, 0:120], color=(127 / 255, 0 / 255, 255 / 255))
+# plt.plot(time[0:120], S2ID_True.data[0, 0:120], color=(203 / 255, 41 / 255, 123 / 255))
+# plt.ylabel('y1')
+# plt.xlabel('Time [s]')
+# plt.legend(['True trajectory', 'Identified trajectory', 'True linearized trajectory'], loc='upper right')
+# plt.subplot(3, 2, 4)
+# plt.plot(time[0:120], S2_test.data[1, 0:120], color=(0 / 255, 0 / 255, 255 / 255))
+# plt.plot(time[0:120], S2ID_test.data[1, 0:120], color=(127 / 255, 0 / 255, 255 / 255))
+# plt.plot(time[0:120], S2ID_True.data[1, 0:120], color=(203 / 255, 41 / 255, 123 / 255))
+# plt.ylabel('y2')
+# plt.xlabel('Time [s]')
+# plt.legend(['True trajectory', 'Identified trajectory', 'True linearized trajectory'], loc='upper right')
+# plt.subplot(3, 2, 5)
+# plt.plot(time[0:120], np.abs(subtract2Signals(S2_test, S2ID_test).data[0, 0:120]), color=(127 / 255, 0 / 255, 255 / 255))
+# plt.plot(time[0:120], np.abs(subtract2Signals(S2_test, S2ID_True).data[0, 0:120]), color=(203 / 255, 41 / 255, 123 / 255))
+# plt.ylabel('Absolute Error y1')
+# plt.xlabel('Time [s]')
+# plt.legend(['Error identified trajectory', 'Error true linearized trajectory'], loc='upper right')
+# plt.subplot(3, 2, 6)
+# plt.plot(time[0:120], np.abs(subtract2Signals(S2_test, S2ID_test).data[1, 0:120]), color=(127 / 255, 0 / 255, 255 / 255))
+# plt.plot(time[0:120], np.abs(subtract2Signals(S2_test, S2ID_True).data[1, 0:120]), color=(203 / 255, 41 / 255, 123 / 255))
+# plt.ylabel('Absolute Error y2')
+# plt.xlabel('Time [s]')
+# plt.show()
+
+

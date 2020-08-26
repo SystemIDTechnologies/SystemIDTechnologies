@@ -9,6 +9,7 @@ Python: 3.7.7
 
 
 import numpy as np
+import scipy.linalg as LA
 
 from SystemIDAlgorithms.Propagation import propagation
 
@@ -36,11 +37,11 @@ class Signal:
             self.data = np.zeros([self.dimension, self.number_steps])
             for i in range(self.dimension):
                 self.data[i, 0:int(self.number_steps/3)] = np.linspace(0, self.maximum_ramp[i], int(self.number_steps/3))
-                self.data[i, int(self.number_steps/3):2*int(self.number_steps/3)] = self.standard_deviation[i, i]*np.random.randn(2*int(self.number_steps/3)-int(self.number_steps/3)) + self.maximum_ramp[i]
+                self.data[i, int(self.number_steps/3):2*int(self.number_steps/3)] = LA.sqrtm(self.standard_deviation)[i, i]*np.random.randn(2*int(self.number_steps/3)-int(self.number_steps/3)) + self.maximum_ramp[i]
                 self.data[i, 2*int(self.number_steps / 3):self.number_steps] = self.data[i, 2*int(self.number_steps/3)-1] * np.exp(self.exponential_decay_rate[i]*np.linspace(0, self.number_steps-2*int(self.number_steps / 3), self.number_steps-2*int(self.number_steps / 3)))
             self.signal_type = 'combination'
         elif np.max(self.mean) or np.max(self.standard_deviation):
-            self.data = np.matmul(self.standard_deviation, np.random.randn(self.dimension, self.number_steps)) + self.mean[:,np.newaxis]
+            self.data = np.matmul(LA.sqrtm(self.standard_deviation), np.random.randn(self.dimension, self.number_steps)) + self.mean[:,np.newaxis]
             self.signal_type = 'white_noise'
         elif np.max(self.magnitude_impulse):
             self.data = np.zeros([self.dimension, self.number_steps])

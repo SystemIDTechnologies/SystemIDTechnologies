@@ -12,11 +12,11 @@ import numpy as np
 from scipy.linalg import fractional_matrix_power as matpow
 
 
-def getInitialConditionResponseMarkovParameters(A, C, x0, number_steps):
+def getInitialConditionResponseMarkovParameters(A, C, number_steps):
 
-    markov_parameters = [np.matmul(C(0), x0)]
+    markov_parameters = [C(0)]
 
     for i in range(number_steps - 1):
-        markov_parameters.append(np.matmul(C(0), np.matmul(matpow(A(0), i), x0)))
+        markov_parameters.append(np.matmul(C(0), matpow(A(0), i)))
 
     return markov_parameters

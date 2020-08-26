@@ -9,8 +9,8 @@ Python: 3.7.7
 
 
 import numpy as np
-from numpy.linalg import inv
-from scipy.linalg import expm
+from numpy.linalg import inv, matrix_power
+from scipy.linalg import expm, eig
 
 
 class ThreeMassSpringDamperDynamics:
@@ -74,7 +74,10 @@ class ThreeMassSpringDamperDynamics:
         self.B2[2, 2] = self.force_coefficient3
         self.Bc = np.zeros([self.state_dimension, self.input_dimension])
         self.Bc[3:6, 0:3] = np.matmul(inv(self.M), self.B2)
-        self.Bd = np.matmul(np.matmul((self.Ad - np.eye(self.state_dimension)), inv(self.Ac)), self.Bc)
+        self.Bd = np.eye(6) * self.dt
+        for i in range(1, 100):
+            self.Bd = self.Bd + matrix_power(self.Ac, i)*self.dt**(i+1)/np.math.factorial(i+1)
+        self.Bd = np.matmul(self.Bd, self.Bc)
 
         self.Cd = np.zeros([self.output_dimension, self.state_dimension])
         self.Cp = np.zeros([self.output_dimension, int(self.state_dimension / 2)])
