@@ -16,3 +16,4 @@ Five systems are currently implemented: one, two, three mass spring damper syste
 
 ## Example
 Let's study the Two Mass Spring Damper System.
+![](Images/Mass2.png)
