@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 
 
-from ClassesSystems.ClassMassSpringDamperDynamics import MassSpringDamperDynamics
+from ClassesSystems.ClassTwoMassSpringDamperDynamics import TwoMassSpringDamperDynamics
 from ClassesGeneral.ClassSystem import LinearSystem
 from ClassesGeneral.ClassSignal import Signal, OutputSignal, subtract2Signals, add2Signals
 from ClassesGeneral.ClassExperiments import Experiments
@@ -44,12 +44,17 @@ snr = 1e8
 
 ## Define the dynamics
 dt = 0.1
-mass = 1
-spring_constant = 1
-damping_coefficient = 0.01
-force_coefficient = 1
-measurements = ['position', 'velocity', 'acceleration']
-Dynamics = MassSpringDamperDynamics(dt, mass, spring_constant, damping_coefficient, force_coefficient, measurements)
+mass1 = 1
+mass2 = 1.8
+spring_constant1 = 1
+spring_constant2 = 3
+damping_coefficient1 = 0.3
+damping_coefficient2 = 0.4
+force_coefficient1 = 1
+force_coefficient2 = 2
+measurements1 = ['position', 'velocity', 'acceleration']
+measurements2 = ['position', 'velocity', 'acceleration']
+Dynamics = TwoMassSpringDamperDynamics(dt, mass1, mass2, spring_constant1, spring_constant2, damping_coefficient1, damping_coefficient2, force_coefficient1, force_coefficient2, measurements1, measurements2)
 
 
 
@@ -71,12 +76,12 @@ if inputSignalName == 'Zero':
         init_state = [(1*np.random.randn(Dynamics.state_dimension), 0)]
         initial_states.append(init_state)
         if i == 0:
-            Sys = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, init_state, 'Mass Spring Damper System', Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D)
+            Sys = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, init_state, 'Two Mass Spring Damper System', Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D)
             systems.append(Sys)
         else:
-            systems.append(LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, init_state, 'Mass Spring Damper System', Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D))
+            systems.append(LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, init_state, 'Two Mass Spring Damper System', Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D))
 else:
-    Sys = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, initial_states, 'Mass Spring Damper System', Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D)
+    Sys = LinearSystem(frequency, Dynamics.state_dimension, Dynamics.input_dimension, Dynamics.output_dimension, initial_states, 'Two Mass Spring Damper System', Dynamics.A, Dynamics.B, Dynamics.C, Dynamics.D)
 
 
 
@@ -127,7 +132,7 @@ else:
 
 
 
-## Add noise
+## Add some noise
 if noise:
     if inputSignalName == 'Zero':
         for i in range(number_experiments):
@@ -203,3 +208,5 @@ else:
 plotEigenValues([Sys, SysID], 2)
 plotSingularValues([ERA1], ['IdentifiedSystem'], 3)
 plotMarkovParameters2(markov_parameters, markov_parameters_true, 'OKID', 'True', 4)
+
+

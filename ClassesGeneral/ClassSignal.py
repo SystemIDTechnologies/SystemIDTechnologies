@@ -2,8 +2,8 @@
 Author: Damien GUEHO
 Copyright: Copyright (C) 2020 Damien GUEHO
 License: Public Domain
-Version: 0.1
-Date: May 2020
+Version: 1.0.0
+Date: August 2020
 Python: 3.7.7
 """
 
@@ -75,8 +75,8 @@ class OutputSignal(Signal):
 
 
 def subtract2Signals(signal1, signal2):
-    return Signal(signal1.total_time, signal1.frequency, signal1.dimension, 'Error: ' + signal1.name + ' - ' + signal2.name, data=signal1.data-signal2.data)
+    return Signal(signal1.total_time, signal1.frequency, signal1.dimension, signal1.name + ' - ' + signal2.name, data=signal1.data-signal2.data)
 
 
 def add2Signals(signal1, signal2):
-    return Signal(signal1.total_time, signal1.frequency, signal1.dimension, 'Sum: ' + signal1.name + ' + ' + signal2.name, data=signal1.data+signal2.data)
+    return Signal(signal1.total_time, signal1.frequency, signal1.dimension, signal1.name + ' + ' + signal2.name, data=signal1.data+signal2.data)

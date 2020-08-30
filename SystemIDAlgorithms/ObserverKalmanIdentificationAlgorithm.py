@@ -2,8 +2,8 @@
 Author: Damien GUEHO
 Copyright: Copyright (C) 2020 Damien GUEHO
 License: Public Domain
-Version: 0.1
-Date: May 2020
+Version: 1.0.0
+Date: August 2020
 Python: 3.7.7
 """
 
