@@ -34,4 +34,9 @@ snr = 1e8
 ```
 
 By default, the initial condition is set to be random and the input signal is a white noise of frequency 5 for a total of 50 seconds. Some white noise is added to the measurements with a snr of 1e8.
-Initial condition can be random (`'Random'`) or zero (`'Zero'`) or customized later.
+Initial condition can be random (`'Random'`) or zero (`'Zero'`) or customized later. Input signals can be:
+* `'Impulse'`
+* `'White Noise'`
+* `'Triangle'`
+* `'Sinusoidal'`
+* `'Combination'`
