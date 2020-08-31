@@ -56,6 +56,8 @@ if initialCondition == 'Zero':
     initial_condition = np.zeros(Dynamics.state_dimension)
 if initialCondition == 'Random':
     initial_condition = np.random.randn(Dynamics.state_dimension)
+if initialCondition == 'Custom':
+    initial_condition = np.array([0, 1, 0.1, 0.2])
 initial_states = [(initial_condition, 0)]
 
 
