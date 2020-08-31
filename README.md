@@ -20,3 +20,18 @@ Let's study the Two Mass Spring Damper System.
   <img src="Images/Mass2.png" width="500">
 </p>
 
+### 1. Initial Condition, Input Signal and Measurement Noise
+After libraries imports, one must choose an initial condition type, an input signal, the frequency and total length of the input signal as well as a signal to noise ratio for measurement noise (if `True`):
+
+```python
+## Initial Condition type, Input Signal parameters and Noise
+initialCondition = 'Random'
+inputSignalName = 'White Noise'
+frequency = 5
+total_time = 50
+noise = True
+snr = 1e8
+```
+
+By default, the initial condition is set to be random and the input signal is a white noise of frequency 5 for a total of 50 seconds. Some white noise is added to the measurements with a snr of 1e8.
+Initial condition can be random (`'Random'`) or zero (`'Zero'`) or customized later.
